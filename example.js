@@ -1,28 +1,30 @@
-const { Client } = require("./index");
-const { Events } = require("./src/utilities/Constants");
+const { Client, Authentication } = require("./index");
+const { EVENTS } = require("./src/utilities/Constants");
 
 require('dotenv').config({
     path: './.env'
 });
 
 const client = new Client({
-    username: process.env.IG_USERNAME,
-    password: process.env.IG_PASSWORD
+    authentication: new Authentication({
+        username: process.env.IG_USERNAME,
+        password: process.env.IG_PASSWORD,
+    }),
+    puppeteerOptions: {
+        headless: false
+    }
 });
 
-for (const event in Events) {
-    client.on(Events[event], function () {
-        console.log(`on ${Events[event]}`)
+for (const event in EVENTS) {
+    client.on(EVENTS[event], function () {
+        console.log(`on ${EVENTS[event]}`)
     })
 }
 
-client.on(Events.AUTHENTICATED, async () => {
-    const pic = await client.getProfilePicture("rifkiiard");
-    console.log({
-        pic
-    });
-
-    await client.getUser();
+client.on(EVENTS.AUTHENTICATED, async () => {
+    client.getInfo().then(info => console.log(info));
+    client.getUser("haniiamp").then(info => console.log(info));
+    client.getUserPicture("haniiamp").then(info => console.log(info));
 })
 
 client.initialize();
