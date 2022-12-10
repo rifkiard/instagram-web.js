@@ -1,13 +1,14 @@
 'use strict'
 
-const { URLs } = require("./Constants");
-
 class InterfaceController {
 
     constructor({ client }) {
         this.client = client;
     }
 
+    /**
+     * Close the "Turn on Notification" prompt when it's displayed.
+     */
     closeNotificationPrompt() {
         const h2s = document.querySelectorAll("h2");
         h2s.forEach(el => {
@@ -27,7 +28,11 @@ class InterfaceController {
         })
     }
 
-    getProfilePicture(username) {
+    /**
+     * Get the URL of user profile picture.
+     * @param  {string} username Username of targeted user.
+     */
+    getUserPicture(username) {
         const imgs = document.querySelectorAll("img");
 
         for (var i = 0; i < imgs.length; i++) {
