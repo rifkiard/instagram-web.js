@@ -43,6 +43,17 @@ class InterfaceController {
 
         return null;
     }
+
+    openNewPostModal() {
+        const button = document.querySelector("svg[aria-label='New post']")
+
+        if (!button) {
+            return null;
+        }
+
+        button.closest('a').click();
+        return true;
+    }
 }
 
 module.exports = InterfaceController;

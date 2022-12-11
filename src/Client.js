@@ -2,8 +2,12 @@
 
 const puppeteer = require('puppeteer');
 const ClientEvent = require('./ClientEvent');
-const { URLS, DEFAULT_PUPPETEER_OPTIONS, DEFAULT_USER_AGENT, STATUS } = require("./utilities/Constants");
+const { URLS, DEFAULT_PUPPETEER_OPTIONS, DEFAULT_USER_AGENT, STATUS, ALLOWED_MEDIA_MIMETYPES } = require("./utilities/Constants");
+const Injects = require('./utilities/Injects');
 const InterfaceController = require('./utilities/InterfaceContorller');
+const path = require('path');
+const Utilities = require('./utilities/Utilities');
+const Media = require("./structures/Media");
 
 class Client extends ClientEvent {
     constructor(options) {
@@ -32,7 +36,7 @@ class Client extends ClientEvent {
             client: this
         });
 
-        await this.authentication.setupUserDataDir();
+        await this.authentication.setupUserDir();
         this.puppeteerOptions.userDataDir = this.authentication.userDataDir;
 
         if (this.puppeteerOptions.browserWSEndpoint) {
@@ -167,6 +171,63 @@ class Client extends ClientEvent {
             if (!currentPage.isClosed()) {
                 await currentPage.close();
             }
+        });
+    }
+
+    async postFeed({
+        files,
+        caption = ""
+    }) {
+        return new Promise(async (resolve, reject) => {
+
+            console.log(Media);
+            var medias = [];
+            for (var fileIndex = 0; fileIndex < files.length; fileIndex++) {
+                if (Utilities.isValidHttpUrl(files[fileIndex])) {
+                    medias.push(await Media.fromURL(files[fileIndex], this.authentication.userMediaDir));
+                }
+            }
+
+
+            if (!medias.length) {
+                return reject("Insert at least one file");
+            }
+
+            for (const f in medias) {
+                if (!ALLOWED_MEDIA_MIMETYPES.includes(medias[f].type)) {
+                    return reject(`File's mimetype (${medias[f].type}) is not allowed in index ${f}`)
+                }
+            }
+
+            const currentPage = await this.openNewPage();
+
+            await currentPage.goto(URLS.BASE, {
+                waitUntil: 'networkidle0',
+                timeout: 0,
+            });
+
+            await currentPage.waitForSelector("svg[aria-label='New post']")
+
+            await currentPage.evaluate(Injects);
+
+            const openNewPostModal = await currentPage.evaluate(_ => {
+                return window.IGJS.openNewPostModal();
+            })
+
+            if (!openNewPostModal) return;
+
+            await Promise.all([
+                currentPage.waitForFileChooser().then(fileChooser => {
+                    return fileChooser.accept(medias.map(x => x.path));
+                }),
+                currentPage.waitForTimeout(1000).then(() => {
+                    return currentPage.evaluate(() => {
+                        return window.IGJS.clickSelectFromComputerButton()
+                    })
+                })
+            ])
+
+
         });
     }
 }

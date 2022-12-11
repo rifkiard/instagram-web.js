@@ -7,16 +7,19 @@ class Authentication {
     username;
     password;
     dataPath;
+    mediaPath;
     clientId;
 
     client;
     dataDirName;
     userDataDir;
+    userMediaDir;
 
     constructor({
         username,
         password,
         dataPath = "./.instagram_auth",
+        mediaPath = "./.instagram_media",
         clientId,
     }) {
         const idRegex = /^[-_\w]+$/i;
@@ -29,6 +32,7 @@ class Authentication {
         this.dataPath = dataPath;
         this.clientId = clientId;
         this.dataPath = path.resolve(dataPath);
+        this.mediaPath = path.resolve(mediaPath);
         this.dataDirName = this.clientId ? `session-${this.clientId}` : "session"
     }
 
@@ -36,8 +40,9 @@ class Authentication {
         this.client = client;
     }
 
-    async setupUserDataDir() {
+    async setupUserDir() {
         const userDataDir = path.join(this.dataPath, this.dataDirName);
+        const userMediaDir = path.join(this.mediaPath, this.dataDirName);
 
         if (this.client.puppeteerOptions.userDataDir && this.client.puppeteerOptions.userDataDir != userDataDir) {
             throw new Error("Authentication's dataPath is not compatible with a user-supplied userDataDir.");
@@ -47,7 +52,13 @@ class Authentication {
             recursive: true
         })
 
+
+        fs.mkdirSync(userMediaDir, {
+            recursive: true
+        })
+
         this.userDataDir = userDataDir;
+        this.userMediaDir = userMediaDir;
     }
 }
 

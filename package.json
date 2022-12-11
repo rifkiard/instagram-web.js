@@ -10,6 +10,8 @@
   "author": "Rifki Ardiansyah",
   "license": "ISC",
   "dependencies": {
+    "mime": "^3.0.0",
+    "node-fetch": "^2.6.7",
     "puppeteer": "^19.3.0"
   },
   "devDependencies": {
