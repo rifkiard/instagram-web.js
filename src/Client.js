@@ -4,8 +4,6 @@ const puppeteer = require('puppeteer');
 const ClientEvent = require('./ClientEvent');
 const { URLS, DEFAULT_PUPPETEER_OPTIONS, DEFAULT_USER_AGENT, STATUS, ALLOWED_MEDIA_MIMETYPES } = require("./utilities/Constants");
 const Injects = require('./utilities/Injects');
-const InterfaceController = require('./utilities/InterfaceContorller');
-const path = require('path');
 const Utilities = require('./utilities/Utilities');
 const Media = require("./structures/Media");
 
@@ -31,10 +29,6 @@ class Client extends ClientEvent {
 
     async initialize() {
         this.listen();
-
-        this.interfaceController = new InterfaceController({
-            client: this
-        });
 
         await this.authentication.setupUserDir();
         this.puppeteerOptions.userDataDir = this.authentication.userDataDir;

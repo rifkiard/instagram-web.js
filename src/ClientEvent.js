@@ -8,7 +8,6 @@ class ClientEvent extends EventEmitter {
     puppeteerOptions;
     userAgent;
 
-    interfaceController;
     browser;
     page;
     status;
