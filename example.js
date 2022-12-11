@@ -1,5 +1,6 @@
-const { Client, Authentication } = require("./index");
+const { Client, Authentication, Media } = require("./index");
 const { EVENTS } = require("./src/utilities/Constants");
+const Utilities = require("./src/utilities/Utilities");
 
 require('dotenv').config({
     path: './.env'
@@ -11,7 +12,8 @@ const client = new Client({
         password: process.env.IG_PASSWORD,
     }),
     puppeteerOptions: {
-        headless: false
+        headless: false,
+        executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
     }
 });
 
@@ -22,9 +24,18 @@ for (const event in EVENTS) {
 }
 
 client.on(EVENTS.AUTHENTICATED, async () => {
-    client.getInfo().then(info => console.log(info));
-    client.getUser("haniiamp").then(info => console.log(info));
-    client.getUserPicture("haniiamp").then(info => console.log(info));
+    // client.getInfo().then(info => console.log(info));
+    // client.getUser("haniiamp").then(info => console.log(info));
+    // client.getUserPicture("haniiamp").then(info => console.log(info));
+
+    client.postFeed({
+        files: ['https://upload.wikimedia.org/wikipedia/id/1/19/Optimus10108pieces.jpg']
+    })
 })
 
 client.initialize();
+
+
+
+
+

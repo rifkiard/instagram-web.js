@@ -23,3 +23,22 @@ exports.DEFAULT_PUPPETEER_OPTIONS = {
 }
 
 exports.DEFAULT_USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.67 Safari/537.36";
+
+exports.ALLOWED_MEDIA_EXTENSIONS = [
+    "jpeg",
+    "png",
+    "heic",
+    "heif",
+    "mp4",
+    "mov",
+    "qt"
+]
+
+exports.ALLOWED_MEDIA_MIMETYPES = [
+    "image/jpeg",
+    "image/png",
+    "image/heic",
+    "image/heif",
+    "video/mp4",
+    "video/quicktime"
+]
