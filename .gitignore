@@ -2,3 +2,4 @@
 node_modules/
 .instagram_auth/
 .instagram_media/
+.DS_Store

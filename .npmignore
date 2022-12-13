@@ -1,0 +1,16 @@
+.github/*
+
+.eslintrc.json
+.jsdoc.json
+.editorconfig
+.DS_Store
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+.instagram_auth/
+.instagram_media/
+
+.env
