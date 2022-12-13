@@ -2,10 +2,9 @@
 
 const puppeteer = require('puppeteer');
 const ClientEvent = require('./ClientEvent');
-const { URLS, DEFAULT_PUPPETEER_OPTIONS, DEFAULT_USER_AGENT, STATUS, ALLOWED_MEDIA_MIMETYPES } = require("./utilities/Constants");
+const { URLS, DEFAULT_PUPPETEER_OPTIONS, DEFAULT_USER_AGENT, STATUS, ALLOWED_MEDIA_MIMETYPES, CROP_SIZES, MAX_FEED_VIDEO_DURATION_IN_SECONDS } = require("./utilities/Constants");
 const Injects = require('./utilities/Injects');
-const Utilities = require('./utilities/Utilities');
-const Media = require("./structures/Media");
+const { getVideoDurationInSeconds } = require('get-video-duration')
 
 class Client extends ClientEvent {
     constructor(options) {
@@ -169,27 +168,40 @@ class Client extends ClientEvent {
     }
 
     async postFeed({
-        files,
-        caption = ""
+        media,
+        caption = "",
+        crop = CROP_SIZES.ORIGINAL
     }) {
         return new Promise(async (resolve, reject) => {
+            if (!media.length) {
+                return reject("Media must be an array.");
+            }
 
-            console.log(Media);
-            var medias = [];
-            for (var fileIndex = 0; fileIndex < files.length; fileIndex++) {
-                if (Utilities.isValidHttpUrl(files[fileIndex])) {
-                    medias.push(await Media.fromURL(files[fileIndex], this.authentication.userMediaDir));
+            function removeAllMedia() {
+                media.forEach(val => {
+                    val.unlink();
+                })
+            }
+
+            for (var mediaIndex = 0; mediaIndex < media.length; mediaIndex++) {
+                if (media[mediaIndex].url) {
+                    await media[mediaIndex].fetch(this.authentication.userMediaDir);
                 }
             }
 
+            for (var mediaIndex = 0; mediaIndex < media.length; mediaIndex++) {
+                if (!ALLOWED_MEDIA_MIMETYPES.includes(media[mediaIndex].type)) {
+                    removeAllMedia();
+                    return reject(`${media[mediaIndex].type} is not allowed, occur in index of ${mediaIndex}.`);
+                }
 
-            if (!medias.length) {
-                return reject("Insert at least one file");
-            }
+                if (media[mediaIndex].type.startsWith('video/')) {
+                    var duration = await getVideoDurationInSeconds(media[mediaIndex].path);
 
-            for (const f in medias) {
-                if (!ALLOWED_MEDIA_MIMETYPES.includes(medias[f].type)) {
-                    return reject(`File's mimetype (${medias[f].type}) is not allowed in index ${f}`)
+                    if (duration > MAX_FEED_VIDEO_DURATION_IN_SECONDS) {
+                        removeAllMedia();
+                        return reject(`Max feed video duration is ${MAX_FEED_VIDEO_DURATION_IN_SECONDS} seconds, your file is exceed in index of ${fileIndex}.`);
+                    }
                 }
             }
 
@@ -208,11 +220,14 @@ class Client extends ClientEvent {
                 return window.IGJS.openNewPostModal();
             })
 
-            if (!openNewPostModal) return;
+            if (!openNewPostModal) {
+                removeAllMedia();
+                return reject("Post modal not found. This is an error, please make a report to us.");
+            };
 
             await Promise.all([
                 currentPage.waitForFileChooser().then(fileChooser => {
-                    return fileChooser.accept(medias.map(x => x.path));
+                    return fileChooser.accept(media.map(x => x.path));
                 }),
                 currentPage.waitForTimeout(1000).then(() => {
                     return currentPage.evaluate(() => {
@@ -221,7 +236,85 @@ class Client extends ClientEvent {
                 })
             ])
 
+            await currentPage.waitForSelector('svg[aria-label="Select crop"]');
 
+            const cropButton = await currentPage.evaluate(() => {
+                const button = document.querySelector('svg[aria-label="Select crop"]').closest('button')
+
+                if (!button) {
+                    return false;
+                }
+
+                button.click()
+                return true;
+            })
+
+            if (!cropButton) {
+                removeAllMedia();
+                return reject("Crop button not found. This is an error, please make a report to us.");
+            }
+
+            await currentPage.waitForSelector('svg[aria-label="Crop square icon"]');
+
+            // Crop the picture and video.
+            async function cropMedia() {
+                await currentPage.evaluate((crop) => {
+                    [...document.querySelectorAll('div._aacl._aaco._aacw._aad6')]
+                        .find(d => d.innerText.toLowerCase().match(crop))
+                        .closest('button')
+                        .click()
+                }, crop)
+            }
+
+            for (var mediaIndex = 0; mediaIndex < media.length; mediaIndex++) {
+                await cropMedia();
+
+                if (mediaIndex != media.length - 1) {
+                    await currentPage.evaluate(() => {
+                        document.querySelector('svg[aria-label="Right chevron"]').closest('button').click();
+                    })
+                }
+            }
+
+            // Next to the filters and adjustments.
+            await currentPage.evaluate(() => {
+                [...document.querySelectorAll('button')].find(b => b.innerText.toLowerCase().match('next')).click();
+            })
+
+            await currentPage.waitForTimeout(200);
+
+            // Next to the create a post.
+            await currentPage.evaluate(() => {
+                [...document.querySelectorAll('button')].find(b => b.innerText.toLowerCase().match('next')).click();
+            })
+
+            // Wait for transition.
+            await currentPage.waitForTimeout(1000);
+
+            if (caption) {
+                await currentPage.waitForSelector('[contenteditable="true"][role="textbox"]')
+                await currentPage.type('[contenteditable="true"][role="textbox"]', caption)
+                await currentPage.waitForTimeout(500);
+
+            }
+
+            // Share the post.
+            await currentPage.evaluate(() => {
+                [...document.querySelectorAll('button')].find(b => b.innerText.toLowerCase().match('share')).focus();
+                [...document.querySelectorAll('button')].find(b => b.innerText.toLowerCase().match('share')).click();
+            })
+
+            removeAllMedia();
+
+            await currentPage.waitForNetworkIdle({
+                timeout: 60 * 1000
+            });
+
+            if (!currentPage.isClosed()) {
+                await currentPage.close();
+            }
+
+            resolve(true);
         });
     }
 }

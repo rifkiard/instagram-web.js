@@ -15,6 +15,7 @@ exports.URLS = {
     LOGIN: "https://www.instagram.com/accounts/login/",
     LOGIN_API: "https://www.instagram.com/api/v1/web/accounts/login/ajax/",
     PROFILE_API: "https://www.instagram.com/api/v1/users/web_profile_info/",
+    SIDECAR: "https://www.instagram.com/api/v1/media/configure_sidecar/"
 }
 
 exports.DEFAULT_PUPPETEER_OPTIONS = {
@@ -42,3 +43,12 @@ exports.ALLOWED_MEDIA_MIMETYPES = [
     "video/mp4",
     "video/quicktime"
 ]
+
+exports.CROP_SIZES = {
+    ORIGINAL: "original",
+    SQUARE: "1:1",
+    PORTRAIT: "4:5",
+    LANDSCAPE: "16:9",
+}
+
+exports.MAX_FEED_VIDEO_DURATION_IN_SECONDS = 60;
