@@ -23,8 +23,8 @@ for (const event in EVENTS) {
 
 client.on(EVENTS.AUTHENTICATED, async () => {
     client.getInfo().then(info => console.log(info));
-    client.getUser("haniiamp").then(info => console.log(info));
-    client.getUserPicture("haniiamp").then(url => console.log(url));
+    client.getUser("rifkiiard").then(info => console.log(info));
+    client.getUserPicture("rifkiiard").then(url => console.log(url));
 
     client.postFeed({
         media: [
