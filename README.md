@@ -12,7 +12,7 @@ Automated instagram activity.
 | Get specific user information | ✅                   |
 | Post a picture                | ✅                   |
 | Post a video                  | ✅ (Chrome required) |
-| Post multiple picture         | ✅                   |
+| Post multiple media           | ✅                   |
 
 ## Examples
 
