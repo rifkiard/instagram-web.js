@@ -29,7 +29,6 @@ class Authentication {
 
         this.username = username;
         this.password = password;
-        this.dataPath = dataPath;
         this.clientId = clientId;
         this.dataPath = path.resolve(dataPath);
         this.mediaPath = path.resolve(mediaPath);

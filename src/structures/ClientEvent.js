@@ -1,8 +1,11 @@
 'use strict'
 
 const EventEmitter = require('events');
-const { STATUS, URLS, EVENTS } = require('./utilities/Constants');
+const { STATUS, URLS, EVENTS } = require('../utilities/Constants');
 
+/**
+ * Base class of Client.
+ */
 class ClientEvent extends EventEmitter {
     authentication;
     puppeteerOptions;

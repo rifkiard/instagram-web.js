@@ -1,15 +1,33 @@
 {
-  "name": "instagram.js",
+  "name": "instagram-web.js",
   "version": "1.0.0",
-  "description": "Headless instagram",
+  "description": "Headless automated instagram activity.",
+  "keywords": [
+    "bot",
+    "instagram",
+    "puppeteer",
+    "api",
+    "automated",
+    "robot",
+    "ai"
+  ],
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "example": "node example.js"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rifkiard/instagram-web.js.git"
+  },
+  "bugs": {
+    "url": "https://github.com/rifkiard/instagram-web.js/issues"
+  },
+  "homepage": "https://github.com/rifkiard/instagram-web.js",
   "author": "Rifki Ardiansyah",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
+    "get-video-duration": "^4.1.0",
     "mime": "^3.0.0",
     "node-fetch": "^2.6.7",
     "puppeteer": "^19.3.0"
@@ -17,5 +35,8 @@
   "devDependencies": {
     "dotenv": "^16.0.3",
     "jsdoc": "^4.0.0"
+  },
+  "engines": {
+    "node": ">=10"
   }
 }
