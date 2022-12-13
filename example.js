@@ -1,5 +1,4 @@
-const { Client, Authentication, FeedMedia } = require("./index");
-const { EVENTS, CROP_SIZES } = require("./src/utilities/Constants");
+const { Client, Authentication, FeedMedia, EVENTS, CROP_SIZES } = require("./index");
 
 require('dotenv').config({
     path: './.env'
@@ -11,7 +10,7 @@ const client = new Client({
         password: process.env.IG_PASSWORD,
     }),
     puppeteerOptions: {
-        headless: false,
+        headless: true,
         executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
     }
 });
@@ -25,7 +24,7 @@ for (const event in EVENTS) {
 client.on(EVENTS.AUTHENTICATED, async () => {
     client.getInfo().then(info => console.log(info));
     client.getUser("haniiamp").then(info => console.log(info));
-    client.getUserPicture("haniiamp").then(info => console.log(info));
+    client.getUserPicture("haniiamp").then(url => console.log(url));
 
     client.postFeed({
         media: [

@@ -1,11 +1,23 @@
 'use strict'
 
 const puppeteer = require('puppeteer');
-const ClientEvent = require('./ClientEvent');
-const { URLS, DEFAULT_PUPPETEER_OPTIONS, DEFAULT_USER_AGENT, STATUS, ALLOWED_MEDIA_MIMETYPES, CROP_SIZES, MAX_FEED_VIDEO_DURATION_IN_SECONDS } = require("./utilities/Constants");
+const ClientEvent = require('./structures/ClientEvent');
+const { URLS, DEFAULT_PUPPETEER_OPTIONS, DEFAULT_USER_AGENT, STATUS, ALLOWED_MEDIA_MIMETYPES, MAX_FEED_VIDEO_DURATION_IN_SECONDS } = require("./utilities/Constants");
 const Injects = require('./utilities/Injects');
-const { getVideoDurationInSeconds } = require('get-video-duration')
+const { getVideoDurationInSeconds } = require('get-video-duration');
+const FeedMedia = require('./structures/FeedMedia');
 
+/**
+ * Instagram client.
+ * @extends {ClientEvent}
+ * @param {object} options - Client options.
+ * @param {Authentication} options.authentication - Representing instagram authentication and determines how session is saved.
+ * @param {object} options.puppeteerOptions - Puppeteer launch options. View docs here: https://github.com/puppeteer/puppeteer/
+ * @param {string} options.userAgent -  User agent to use in puppeteer.
+ * 
+ * @fires Client#authenticated
+ * @fires Client#auth_failure
+ */
 class Client extends ClientEvent {
     constructor(options) {
         super();
@@ -26,6 +38,10 @@ class Client extends ClientEvent {
         this.authentication.injectClient(this);
     }
 
+    /**
+    * Sets up events and requirements, kicks off authentication request
+    * @returns {Promise<void>}
+    */
     async initialize() {
         this.listen();
 
@@ -55,8 +71,14 @@ class Client extends ClientEvent {
         await this.page.type('[name="username"]', this.authentication.username);
         await this.page.type('[name="password"]', this.authentication.password);
         await this.page.click('[type="submit"]');
+
+        return;
     }
 
+    /**
+     * Open new tab in puppeteer browser.
+     * @returns {Promise<Page>}
+     */
     async openNewPage() {
         const currentPage = await this.browser.newPage();
         await currentPage.setUserAgent(this.userAgent);
@@ -64,8 +86,12 @@ class Client extends ClientEvent {
         return currentPage;
     }
 
+    /**
+     * Get URL of specific user picture by their Instagram username.
+     * @param {string} username
+     * @returns {Promise<string|null>}
+     */
     async getUserPicture(username) {
-
         return new Promise(async (resolve) => {
             const currentPage = await this.openNewPage();
 
@@ -99,6 +125,11 @@ class Client extends ClientEvent {
         });
     }
 
+    /**
+     * Get specific user information.
+     * @param {string} username
+     * @returns {Promise<object|null>}
+     */
     async getUser(username) {
         return new Promise(async (resolve) => {
             const currentPage = await this.openNewPage();
@@ -132,7 +163,10 @@ class Client extends ClientEvent {
             }
         });
     }
-
+    /**
+     * Get current user information.
+     * @returns {Promise<object|null>}
+     */
     async getInfo() {
         return new Promise(async (resolve) => {
             const currentPage = await this.openNewPage();
@@ -167,11 +201,20 @@ class Client extends ClientEvent {
         });
     }
 
-    async postFeed({
-        media,
-        caption = "",
-        crop = CROP_SIZES.ORIGINAL
-    }) {
+    /**
+     * Post new feed.
+     * @param {object} params
+     * @param {FeedMedia[]} params.media
+     * @param {string?} params.caption
+     * 
+     * @returns Promise<bool>
+     */
+    async postFeed(params) {
+        const {
+            media,
+            caption = "",
+        } = params;
+
         return new Promise(async (resolve, reject) => {
             if (!media.length) {
                 return reject("Media must be an array.");
@@ -222,6 +265,9 @@ class Client extends ClientEvent {
 
             if (!openNewPostModal) {
                 removeAllMedia();
+                if (!currentPage.isClosed()) {
+                    await currentPage.close();
+                }
                 return reject("Post modal not found. This is an error, please make a report to us.");
             };
 
@@ -251,13 +297,16 @@ class Client extends ClientEvent {
 
             if (!cropButton) {
                 removeAllMedia();
+                if (!currentPage.isClosed()) {
+                    await currentPage.close();
+                }
                 return reject("Crop button not found. This is an error, please make a report to us.");
             }
 
             await currentPage.waitForSelector('svg[aria-label="Crop square icon"]');
 
             // Crop the picture and video.
-            async function cropMedia() {
+            async function cropMedia(crop) {
                 await currentPage.evaluate((crop) => {
                     [...document.querySelectorAll('div._aacl._aaco._aacw._aad6')]
                         .find(d => d.innerText.toLowerCase().match(crop))
@@ -267,7 +316,7 @@ class Client extends ClientEvent {
             }
 
             for (var mediaIndex = 0; mediaIndex < media.length; mediaIndex++) {
-                await cropMedia();
+                await cropMedia(media[mediaIndex].cropSize);
 
                 if (mediaIndex != media.length - 1) {
                     await currentPage.evaluate(() => {
@@ -307,7 +356,7 @@ class Client extends ClientEvent {
             removeAllMedia();
 
             await currentPage.waitForNetworkIdle({
-                timeout: 60 * 1000
+                timeout: 60 * 2 * 1000
             });
 
             if (!currentPage.isClosed()) {
