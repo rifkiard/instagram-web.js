@@ -59,6 +59,8 @@ client.on("authenticated", () => {
         .then(info => console.log(info));
 })
 
+client.initialize();
+
 ```
 
 ### Get specific user information
@@ -83,6 +85,7 @@ client.on("authenticated", () => {
         .then(info => console.log(info));
 })
 
+client.initialize();
 ```
 
 ### Get specific user profile
@@ -106,6 +109,8 @@ client.on("authenticated", () => {
         .getUserPicture("rifkiiard")
         .then(url => console.log(url));
 })
+
+client.initialize();
 
 ```
 
@@ -142,6 +147,8 @@ client.on("authenticated", () => {
         caption: "I am Optimus Prime ..."
     })
 })
+
+client.initialize();
 
 ```
 
