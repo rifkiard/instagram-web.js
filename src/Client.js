@@ -303,15 +303,15 @@ class Client extends ClientEvent {
                 return reject("Crop button not found. This is an error, please make a report to us.");
             }
 
+            // trigger to wait till cropper is ready.
             await currentPage.waitForSelector('svg[aria-label="Crop square icon"]');
 
             // Crop the picture and video.
             async function cropMedia(crop) {
                 await currentPage.evaluate((crop) => {
-                    [...document.querySelectorAll('div._aacl._aaco._aacw._aad6')]
+                    [...document.querySelectorAll('[role="button"]')]
                         .find(d => d.innerText.toLowerCase().match(crop))
-                        .closest('button')
-                        .click()
+                        .click();
                 }, crop)
             }
 
@@ -320,21 +320,25 @@ class Client extends ClientEvent {
 
                 if (mediaIndex != media.length - 1) {
                     await currentPage.evaluate(() => {
-                        document.querySelector('svg[aria-label="Right chevron"]').closest('button').click();
+                        [...document.querySelectorAll('svg[aria-label="Right chevron"]')].find(x => x.closest('button')).closest('button').click()
+
                     })
                 }
             }
 
+            // check if there prompt reels.
+
+
             // Next to the filters and adjustments.
             await currentPage.evaluate(() => {
-                [...document.querySelectorAll('button')].find(b => b.innerText.toLowerCase().match('next')).click();
+                [...document.querySelectorAll('[role="button"]')].find(b => b.innerText.toLowerCase().match('next')).click();
             })
 
             await currentPage.waitForTimeout(200);
 
             // Next to the create a post.
             await currentPage.evaluate(() => {
-                [...document.querySelectorAll('button')].find(b => b.innerText.toLowerCase().match('next')).click();
+                [...document.querySelectorAll('[role="button"]')].find(b => b.innerText.toLowerCase().match('next')).click();
             })
 
             // Wait for transition.
@@ -347,10 +351,10 @@ class Client extends ClientEvent {
 
             }
 
-            // Share the post.
+            // // Share the post.
             await currentPage.evaluate(() => {
-                [...document.querySelectorAll('button')].find(b => b.innerText.toLowerCase().match('share')).focus();
-                [...document.querySelectorAll('button')].find(b => b.innerText.toLowerCase().match('share')).click();
+                [...document.querySelectorAll('[role="button"]')].find(b => b.innerText.toLowerCase().match('share')).focus();
+                [...document.querySelectorAll('[role="button"]')].find(b => b.innerText.toLowerCase().match('share')).click();
             })
 
             removeAllMedia();

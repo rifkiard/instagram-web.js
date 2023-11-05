@@ -5,6 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const mime = require('mime');
 const { URL } = require("url");
+const https = require('https');
 
 class FeedMedia {
     type;
@@ -79,14 +80,25 @@ class FeedMedia {
             throw new Error('Unable to determine MIME type using URL. Set unsafeMime to true to download it anyway.');
         }
 
+
+        const httpsAgent = new https.Agent({
+            rejectUnauthorized: false,
+        });
+
         var options = {
             ...this.fetchOptions,
             ... {
                 headers: {
                     accept: ALLOWED_MEDIA_MIMETYPES.join(" ")
-                }
+                },
+                agent: httpsAgent,
             }
         }
+
+        console.log({
+            options
+        })
+
 
         const response = await fetch(url, options);
         const responseMime = response.headers.get('Content-Type');
